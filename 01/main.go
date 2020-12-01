@@ -16,13 +16,31 @@ func main() {
 
 	ints := readInts(os.Stdin)
 	ints.Sort()
-	left, right, err := findBlah(ints, seekingSum)
+	i, left, right, err := findBlah3(ints, seekingSum)
 	if err != nil {
 		panic(err)
 	}
 
-	product := ints[left] * ints[right]
-	fmt.Printf("%d x %d = %d\n", left, right, product)
+	product := ints[left] * ints[right] * ints[i]
+	fmt.Printf("%d x %d x %d = %d\n", ints[left], ints[right], ints[i], product)
+}
+
+func findBlah3(inSlice sort.IntSlice, seekingSum int) (int, int, int, error) {
+	for i := 0; i < len(inSlice); i++ {
+		currentVal := inSlice[i]
+		currentTarget := seekingSum - currentVal
+		inSlice[i] = 0
+
+		left, right, err := findBlah(inSlice, currentTarget)
+		inSlice[i] = currentVal
+
+		if err != nil {
+			continue
+		} else if left != i && right != i {
+			return i, left, right, nil
+		}
+	}
+	return -1, -1, -1, fmt.Errorf("Nope")
 }
 
 func findBlah(inSlice sort.IntSlice, seekingSum int) (int, int, error) {
