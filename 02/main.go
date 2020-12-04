@@ -16,7 +16,7 @@ func countValidPasswords(bufReader *bufio.Reader) int {
 	for {
 		rule, password, err := parseLine(bufReader)
 
-		if rule != nil && rule.isValid(password) {
+		if rule != nil && rule.isValid2(password) {
 			count++
 		}
 		if err != nil {
@@ -25,6 +25,21 @@ func countValidPasswords(bufReader *bufio.Reader) int {
 	}
 
 	return count
+}
+
+func (rule *passwordRule) isValid2(password string) bool {
+	found := false
+	for i, c := range password {
+		if byte(c) == rule.letter {
+			if i+1 == rule.minLength || i+1 == rule.maxLength {
+				if found {
+					return false
+				}
+				found = true
+			}
+		}
+	}
+	return found
 }
 
 func (rule *passwordRule) isValid(password string) bool {

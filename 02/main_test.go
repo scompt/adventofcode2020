@@ -12,6 +12,14 @@ func TestCountValidPasswords(t *testing.T) {
 	assert.Equal(t, 1, count)
 }
 
+func TestPasswordRuleIsValid2(t *testing.T) {
+	rule := passwordRule{1, 3, 'a'}
+	assert.True(t, rule.isValid2("aa"))
+	assert.False(t, rule.isValid2("ba"))
+	assert.False(t, rule.isValid2("aaaa"))
+	assert.False(t, rule.isValid2("bb"))
+}
+
 func TestPasswordRuleIsValid(t *testing.T) {
 	rule := passwordRule{1, 3, 'a'}
 	assert.True(t, rule.isValid("aa"))
