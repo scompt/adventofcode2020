@@ -1,6 +1,5 @@
 package main
 
-import "math"
 import "bufio"
 import "os"
 import "io"
@@ -22,28 +21,43 @@ func bspToCol(input string) int {
 	return int(output)
 }
 
-func bspToSeatID(input string) int {
+func bspToSeatID(input string) (int, int, int) {
 	row := bspToRow(input[0:7])
 	col := bspToCol(input[7:10])
-	return row*8 + col
+	return row*8 + col, row, col
 }
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	maxSeatID := 0.0
+	plane := [128][8]bool{}
+
 	for {
 		line, err := reader.ReadString('\n')
 		if len(line) < 7 {
 			break
 		}
 
-		seatID := float64(bspToSeatID(line))
-		maxSeatID = math.Max(maxSeatID, seatID)
+		_, row, col := bspToSeatID(line)
+		plane[row][col] = true
 
 		if err == io.EOF {
 			break
 		}
 	}
 
-	fmt.Printf("%d\n", int(maxSeatID))
+	prev := false
+	for i := 0; i < 128; i++ {
+		for j := 0; j < 8; j++ {
+			if plane[i][j] {
+				fmt.Printf("*")
+				prev = true
+			} else if prev {
+
+				fmt.Printf("%d", i*8+j)
+			} else {
+				fmt.Printf(" ")
+			}
+		}
+		fmt.Printf("\n")
+	}
 }

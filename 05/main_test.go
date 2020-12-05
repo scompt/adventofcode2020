@@ -43,6 +43,7 @@ func TestBspToSeatID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		assert.Equal(t, tt.output, bspToSeatID(tt.input))
+		seatID, _, _ := bspToSeatID(tt.input)
+		assert.Equal(t, tt.output, seatID)
 	}
 }
