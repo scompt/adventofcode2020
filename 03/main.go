@@ -93,5 +93,14 @@ func main() {
 	}
 
 	treeMap, err := parseTreeMap(buf.String())
-	fmt.Printf("%d\n", treeMap.countTrees(3, 1))
+
+	product := 1
+	product *= treeMap.countTrees(1, 1)
+	product *= treeMap.countTrees(3, 1)
+	product *= treeMap.countTrees(5, 1)
+	product *= treeMap.countTrees(7, 1)
+	product *= treeMap.countTrees(1, 2)
+
+	fmt.Printf("%d\n", product)
+
 }

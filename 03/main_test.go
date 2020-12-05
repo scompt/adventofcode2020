@@ -47,4 +47,16 @@ func TestCountTrees(t *testing.T) {
 	treeMap, _ := parseTreeMap(input)
 	count := treeMap.countTrees(3, 1)
 	assert.Equal(t, 7, count)
+
+	count = treeMap.countTrees(1, 1)
+	assert.Equal(t, 2, count)
+
+	count = treeMap.countTrees(5, 1)
+	assert.Equal(t, 3, count)
+
+	count = treeMap.countTrees(7, 1)
+	assert.Equal(t, 4, count)
+
+	count = treeMap.countTrees(1, 2)
+	assert.Equal(t, 2, count)
 }
