@@ -4,6 +4,7 @@ import "testing"
 import "github.com/stretchr/testify/assert"
 import "bufio"
 import "strings"
+import "fmt"
 
 func TestParseBadPassport(t *testing.T) {
 	reader := bufio.NewReader(strings.NewReader("e3cm"))
@@ -102,4 +103,55 @@ iyr:2011 ecl:brn hgt:59in`
 	assert.False(t, passports[1].isValid())
 	assert.True(t, passports[2].isValid())
 	assert.False(t, passports[3].isValid())
+}
+
+func TestIsValidHeight(t *testing.T) {
+	tests := []struct {
+		input string
+		valid bool
+	}{
+		{"", false},
+		{"123", false},
+		{"20cm", false},
+		{"20in", false},
+		{"200cm", false},
+		{"100in", false},
+		{"160cm", true},
+		{"150cm", true},
+		{"50in", false},
+		{"60in", true},
+		{"50incm", false},
+	}
+
+	for _, tt := range tests {
+		if tt.valid {
+			assert.True(t, isValidHeight(tt.input), fmt.Sprintf("%s == %t", tt.input, tt.valid))
+		} else {
+			assert.False(t, isValidHeight(tt.input), fmt.Sprintf("%s == %t", tt.input, tt.valid))
+		}
+	}
+}
+
+func TestIsValidHairColor(t *testing.T) {
+	tests := []struct {
+		input string
+		valid bool
+	}{
+		{"", false},
+		{"123", false},
+		{"#123456", true},
+		{"123456", false},
+		{"#123abc", true},
+		{"#abcdef", true},
+		{"#qwerty", false},
+		{"#123456asdf", false},
+	}
+
+	for _, tt := range tests {
+		if tt.valid {
+			assert.True(t, isValidHairColor(tt.input), fmt.Sprintf("%s == %t", tt.input, tt.valid))
+		} else {
+			assert.False(t, isValidHairColor(tt.input), fmt.Sprintf("%s == %t", tt.input, tt.valid))
+		}
+	}
 }
