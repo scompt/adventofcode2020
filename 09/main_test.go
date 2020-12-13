@@ -25,14 +25,17 @@ func TestReadPreamble(t *testing.T) {
 	for _, tt := range tests {
 		reader := bufio.NewReader(strings.NewReader(tt.input))
 		scanner := bufio.NewScanner(reader)
-		windowList, windowSet, err := readPreamble(scanner, tt.preambleSize)
+		windowList, windowSet, allInts, err := readPreamble(scanner, tt.preambleSize)
 		if tt.errorCase {
 			assert.Error(t, err, tt.input)
 			assert.Nil(t, windowList, tt.input)
+			assert.Nil(t, windowSet, tt.input)
+			assert.Nil(t, allInts, tt.input)
 		} else {
 			assert.NoError(t, err, tt.input)
 			assert.NotNil(t, windowList, tt.input)
 			assert.Equal(t, tt.preambleSize, windowList.Len(), tt.input)
+			assert.Equal(t, tt.preambleSize, len(allInts), tt.input)
 
 			assert.True(t, scanner.Scan(), tt.input)
 			nextIntStr := scanner.Text()
@@ -70,13 +73,27 @@ func TestFindFirstFailure(t *testing.T) {
 	for _, tt := range tests {
 		reader := bufio.NewReader(strings.NewReader(tt.input))
 		scanner := bufio.NewScanner(reader)
-		windowList, windowSet, err := readPreamble(scanner, tt.preambleSize)
+		windowList, windowSet, allInts, err := readPreamble(scanner, tt.preambleSize)
 		assert.NoError(t, err, tt.input)
 		assert.NotNil(t, windowList, tt.input)
 		assert.Equal(t, tt.preambleSize, windowList.Len(), tt.input)
 
-		firstFailure, err := findFirstFailure(scanner, windowList, windowSet)
+		firstFailure, allInts, err := findFirstFailure(scanner, windowList, windowSet, allInts)
 		assert.NoError(t, err, tt.input)
 		assert.Equal(t, tt.firstFailure, firstFailure)
 	}
+}
+
+func TestFindContiguousRange(t *testing.T) {
+	allInts := []int{35, 20, 15, 25, 47, 40, 62, 55, 65, 95, 102, 117, 150, 182, 127, 219, 299, 277, 309, 576}
+	contiguousRange, err := findContiguousRange(allInts, 127)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, contiguousRange)
+	assert.Equal(t, 15, contiguousRange[0])
+	assert.Equal(t, 40, contiguousRange[len(contiguousRange)-1])
+
+	min, max := findMinMax(contiguousRange)
+	assert.Equal(t, 15, min, contiguousRange)
+	assert.Equal(t, 47, max, contiguousRange)
 }
