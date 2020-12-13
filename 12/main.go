@@ -12,41 +12,54 @@ type location struct {
 	y int
 }
 
-func east(loc location, orient int, value int) (location, int) {
-	loc.x -= value
-	return loc, orient
+func east(shipLoc location, waypointLoc location, orient int, value int) (location, location, int) {
+	waypointLoc.x += value
+	return shipLoc, waypointLoc, orient
 }
-func west(loc location, orient int, value int) (location, int) {
-	loc.x += value
-	return loc, orient
+func west(shipLoc location, waypointLoc location, orient int, value int) (location, location, int) {
+	waypointLoc.x -= value
+	return shipLoc, waypointLoc, orient
 }
-func south(loc location, orient int, value int) (location, int) {
-	loc.y -= value
-	return loc, orient
+func south(shipLoc location, waypointLoc location, orient int, value int) (location, location, int) {
+	waypointLoc.y -= value
+	return shipLoc, waypointLoc, orient
 }
-func north(loc location, orient int, value int) (location, int) {
-	loc.y += value
-	return loc, orient
+func north(shipLoc location, waypointLoc location, orient int, value int) (location, location, int) {
+	waypointLoc.y += value
+	return shipLoc, waypointLoc, orient
 }
-func left(loc location, orient int, value int) (location, int) {
-	orient = (orient + 360 - value) % 360
-	return loc, orient
-}
-func right(loc location, orient int, value int) (location, int) {
-	orient = (orient + 360 + value) % 360
-	return loc, orient
-}
-func forward(loc location, orient int, value int) (location, int) {
-	if orient == 0 {
-		return east(loc, orient, value)
-	} else if orient == 180 {
-		return west(loc, orient, value)
-	} else if orient == 270 {
-		return north(loc, orient, value)
-	} else if orient == 90 {
-		return south(loc, orient, value)
+func left(shipLoc location, waypointLoc location, orient int, value int) (location, location, int) {
+	if value == 90 {
+		waypointLoc.x, waypointLoc.y = -waypointLoc.y, waypointLoc.x
+
+	} else if value == 180 {
+		waypointLoc.x, waypointLoc.y = -waypointLoc.x, -waypointLoc.y
+
+	} else if value == 270 {
+		waypointLoc.x, waypointLoc.y = waypointLoc.y, -waypointLoc.x
+	} else {
+		panic("asdf")
 	}
-	panic(orient)
+	return shipLoc, waypointLoc, orient
+}
+func right(shipLoc location, waypointLoc location, orient int, value int) (location, location, int) {
+	if value == 90 {
+		waypointLoc.x, waypointLoc.y = waypointLoc.y, -waypointLoc.x
+
+	} else if value == 180 {
+		waypointLoc.x, waypointLoc.y = -waypointLoc.x, -waypointLoc.y
+
+	} else if value == 270 {
+		waypointLoc.x, waypointLoc.y = -waypointLoc.y, waypointLoc.x
+	} else {
+		panic("asdf")
+	}
+	return shipLoc, waypointLoc, orient
+}
+func forward(shipLoc location, waypointLoc location, orient int, value int) (location, location, int) {
+	shipLoc.x += value * waypointLoc.x
+	shipLoc.y += value * waypointLoc.y
+	return shipLoc, waypointLoc, orient
 }
 
 func abs(in int) int {
@@ -58,10 +71,15 @@ func abs(in int) int {
 
 func sail(reader *bufio.Reader) (location, int) {
 	scanner := bufio.NewScanner(reader)
-	loc := location{}
+	shipLoc := location{}
+	waypointLoc := location{
+		x: 10,
+		y: 1,
+	}
 	orientation := 0
 
 	for {
+		fmt.Printf("%+v %+v\n", shipLoc, waypointLoc)
 		if !scanner.Scan() {
 			if scanner.Err() == nil {
 				break
@@ -77,25 +95,25 @@ func sail(reader *bufio.Reader) (location, int) {
 
 		switch command {
 		case "N":
-			loc, orientation = north(loc, orientation, value)
+			shipLoc, waypointLoc, orientation = north(shipLoc, waypointLoc, orientation, value)
 
 		case "S":
-			loc, orientation = south(loc, orientation, value)
+			shipLoc, waypointLoc, orientation = south(shipLoc, waypointLoc, orientation, value)
 
 		case "E":
-			loc, orientation = east(loc, orientation, value)
+			shipLoc, waypointLoc, orientation = east(shipLoc, waypointLoc, orientation, value)
 
 		case "W":
-			loc, orientation = west(loc, orientation, value)
+			shipLoc, waypointLoc, orientation = west(shipLoc, waypointLoc, orientation, value)
 
 		case "L":
-			loc, orientation = left(loc, orientation, value)
+			shipLoc, waypointLoc, orientation = left(shipLoc, waypointLoc, orientation, value)
 
 		case "R":
-			loc, orientation = right(loc, orientation, value)
+			shipLoc, waypointLoc, orientation = right(shipLoc, waypointLoc, orientation, value)
 
 		case "F":
-			loc, orientation = forward(loc, orientation, value)
+			shipLoc, waypointLoc, orientation = forward(shipLoc, waypointLoc, orientation, value)
 
 		default:
 			panic(command)
@@ -103,7 +121,7 @@ func sail(reader *bufio.Reader) (location, int) {
 
 	}
 
-	return loc, abs(loc.x) + abs(loc.y)
+	return shipLoc, abs(shipLoc.x) + abs(shipLoc.y)
 }
 func main() {
 	reader := bufio.NewReader(os.Stdin)
