@@ -35,6 +35,30 @@ type graph struct {
 	reverseEdges map[bag]*list.List
 }
 
+func (g *graph) toString() string {
+	str := "digraph g {\n"
+	for k := range g.nodes {
+		str += fmt.Sprintf("\t%s_%s;\n", k.adjective, k.color)
+	}
+
+	for source, l := range g.forwardEdges {
+		for e := l.Front(); e != nil; e = e.Next() {
+			aTarget := e.Value.(edge)
+			str += fmt.Sprintf("\t%s_%s -> %s_%s [label=\"%d\"];\n", source.adjective, source.color, aTarget.other.adjective, aTarget.other.color, aTarget.weight)
+		}
+	}
+
+	for source, l := range g.reverseEdges {
+		for e := l.Front(); e != nil; e = e.Next() {
+			aTarget := e.Value.(bag)
+			str += fmt.Sprintf("\t%s_%s -> %s_%s [style=\"dashed\"];\n", source.adjective, source.color, aTarget.adjective, aTarget.color)
+		}
+	}
+	str += "}\n"
+	return str
+
+}
+
 func newGraph() *graph {
 	var g graph
 	g.nodes = make(map[bag]struct{})
@@ -63,7 +87,7 @@ func parseBag(scanner *bufio.Scanner, theGraph *graph) (bag, bool, error) {
 	return parsedBag, final, nil
 }
 
-func parseTargets(scanner *bufio.Scanner, source *bag, theGraph *graph) ([]target, error) {
+func parseTargets(scanner *bufio.Scanner, source bag, theGraph *graph) ([]target, error) {
 	if !scanner.Scan() {
 		return nil, fmt.Errorf("")
 	}
@@ -86,14 +110,16 @@ func parseTargets(scanner *bufio.Scanner, source *bag, theGraph *graph) ([]targe
 		bag, final, err := parseBag(scanner, theGraph)
 		targetBag := target{bagCount, bag}
 		targets = append(targets, targetBag)
-		if _, ok := theGraph.forwardEdges[*source]; !ok {
-			theGraph.forwardEdges[*source] = list.New()
+
+		if _, ok := theGraph.forwardEdges[source]; !ok {
+			theGraph.forwardEdges[source] = list.New()
 		}
-		theGraph.forwardEdges[*source].PushBack(edge{bag, bagCount})
+		theGraph.forwardEdges[source].PushBack(edge{bag, bagCount})
+
 		if _, ok := theGraph.reverseEdges[bag]; !ok {
 			theGraph.reverseEdges[bag] = list.New()
 		}
-		theGraph.reverseEdges[bag].PushBack(*source)
+		theGraph.reverseEdges[bag].PushBack(source)
 
 		if final {
 			break
@@ -115,7 +141,7 @@ func parseRule(scanner *bufio.Scanner, theGraph *graph) (rule, error) {
 	if !scanner.Scan() { // Contains
 		return rule{}, fmt.Errorf("")
 	}
-	targets, err := parseTargets(scanner, &bag, theGraph)
+	targets, err := parseTargets(scanner, bag, theGraph)
 	if err != nil {
 		return rule{}, err
 	}
@@ -171,10 +197,11 @@ func woot(theGraph *graph, sought *bag) int {
 		}
 
 		current := open.Remove(open.Front()).(bag)
-		fmt.Printf("current: %+v\n", current)
+		//fmt.Printf("current: %+v\n", current)
 		if !bagInSlice(current, seen) {
 			seen.PushBack(current)
 			neighbors := theGraph.reverseEdges[current]
+			//fmt.Printf("neighbors: %+v\n", neighbors)
 			if neighbors != nil {
 				for e := neighbors.Front(); e != nil; e = e.Next() {
 					b := e.Value.(bag)
@@ -188,17 +215,28 @@ func woot(theGraph *graph, sought *bag) int {
 	return seen.Len() - 1
 }
 
+func boop(theGraph *graph, from *bag) int {
+	sum := 1
+	neighbors := theGraph.forwardEdges[*from]
+	if neighbors != nil {
+		for e := neighbors.Front(); e != nil; e = e.Next() {
+			anEdge := e.Value.(edge)
+			sum += 0 + anEdge.weight*boop(theGraph, &anEdge.other)
+		}
+	}
+	return sum
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	scanner := bufio.NewScanner(reader)
 	scanner.Split(bufio.ScanWords)
 	_, theGraph, err := parseRules(scanner)
-	fmt.Printf("%+v\n", theGraph.nodes)
-	fmt.Printf("%+v\n", theGraph.forwardEdges)
-	fmt.Printf("%+v\n", theGraph.reverseEdges)
+	fmt.Printf("%s\n", theGraph.toString())
 	if err != nil {
 		panic(err)
 	}
-	count := woot(theGraph, &bag{"shiny", "gold"})
+	//count := woot(theGraph, &bag{"dark", "violet"})
+	count := boop(theGraph, &bag{"shiny", "gold"}) - 1
 	fmt.Printf("%d\n", count)
 }
